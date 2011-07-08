@@ -1,0 +1,148 @@
+diff -up poppler-0.12.1/poppler/XRef.cc.objstream poppler-0.12.1/poppler/XRef.cc
+--- poppler-0.12.1/poppler/XRef.cc.objstream	2009-10-17 17:23:09.000000000 -0500
++++ poppler-0.12.1/poppler/XRef.cc	2009-10-19 08:29:24.552691208 -0500
+@@ -69,37 +69,9 @@
+ // ObjectStream
+ //------------------------------------------------------------------------
+ 
+-class ObjectStream {
+-public:
+-
+-  // Create an object stream, using object number <objStrNum>,
+-  // generation 0.
+-  ObjectStream(XRef *xref, int objStrNumA);
+-
+-  GBool isOk() { return ok; }
+-
+-  ~ObjectStream();
+-
+-  // Return the object number of this object stream.
+-  int getObjStrNum() { return objStrNum; }
+-
+-  // Get the <objIdx>th object from this stream, which should be
+-  // object number <objNum>, generation 0.
+-  Object *getObject(int objIdx, int objNum, Object *obj);
+-
+-private:
+-
+-  int objStrNum;		// object number of the object stream
+-  int nObjects;			// number of objects in the stream
+-  Object *objs;			// the objects (length = nObjects)
+-  int *objNums;			// the object numbers (length = nObjects)
+-  GBool ok;
+-};
+-
+ ObjectStream::ObjectStream(XRef *xref, int objStrNumA) {
+   Stream *str;
+   Parser *parser;
+-  int *offsets;
+   Object objStr, obj1, obj2;
+   int first, i;
+ 
+@@ -107,6 +79,7 @@ ObjectStream::ObjectStream(XRef *xref, i
+   nObjects = 0;
+   objs = NULL;
+   objNums = NULL;
++  offsets = NULL;
+   ok = gFalse;
+ 
+   if (!xref->fetch(objStrNum, 0, &objStr)->isStream()) {
+@@ -128,6 +101,7 @@ ObjectStream::ObjectStream(XRef *xref, i
+     goto err1;
+   }
+   first = obj1.getInt();
++  firstOffset = objStr.getStream()->getBaseStream()->getStart() + first;
+   obj1.free();
+   if (first < 0) {
+     goto err1;
+@@ -156,7 +130,7 @@ ObjectStream::ObjectStream(XRef *xref, i
+       obj1.free();
+       obj2.free();
+       delete parser;
+-      gfree(offsets);
++//       gfree(offsets);
+       goto err1;
+     }
+     objNums[i] = obj1.getInt();
+@@ -166,7 +140,7 @@ ObjectStream::ObjectStream(XRef *xref, i
+     if (objNums[i] < 0 || offsets[i] < 0 ||
+ 	(i > 0 && offsets[i] < offsets[i-1])) {
+       delete parser;
+-      gfree(offsets);
++//       gfree(offsets);
+       goto err1;
+     }
+   }
+@@ -195,7 +169,7 @@ ObjectStream::ObjectStream(XRef *xref, i
+     delete parser;
+   }
+ 
+-  gfree(offsets);
++  // gfree(offsets);
+   ok = gTrue;
+ 
+  err1:
+@@ -212,6 +186,7 @@ ObjectStream::~ObjectStream() {
+     delete[] objs;
+   }
+   gfree(objNums);
++  gfree(offsets);
+ }
+ 
+ Object *ObjectStream::getObject(int objIdx, int objNum, Object *obj) {
+diff -up poppler-0.12.1/poppler/XRef.h.objstream poppler-0.12.1/poppler/XRef.h
+--- poppler-0.12.1/poppler/XRef.h.objstream	2009-09-09 16:22:31.000000000 -0500
++++ poppler-0.12.1/poppler/XRef.h	2009-10-19 08:34:12.152684910 -0500
+@@ -36,7 +36,43 @@
+ class Dict;
+ class Stream;
+ class Parser;
+-class ObjectStream;
++
++
++//------------------------------------------------------------------------
++// ObjectStream
++//------------------------------------------------------------------------
++
++class ObjectStream {
++public:
++
++  // Create an object stream, using object number <objStrNum>,
++  // generation 0.
++  ObjectStream(XRef *xref, int objStrNumA);
++
++  GBool isOk() { return ok; }
++
++  ~ObjectStream();
++
++  // Return the object number of this object stream.
++  int getObjStrNum() { return objStrNum; }
++
++  // Get the <objIdx>th object from this stream, which should be
++  // object number <objNum>, generation 0.
++  Object *getObject(int objIdx, int objNum, Object *obj);
++
++  int *getOffsets() { return offsets; }
++  Guint getFirstOffset() { return firstOffset; }
++
++private:
++
++  int objStrNum;		// object number of the object stream
++  int nObjects;			// number of objects in the stream
++  Object *objs;			// the objects (length = nObjects)
++  int *objNums;			// the object numbers (length = nObjects)
++  GBool ok;
++  int *offsets;			// the object offsets (length = nObjects)
++  Guint firstOffset;
++};
+ 
+ //------------------------------------------------------------------------
+ // XRef
+@@ -123,6 +159,7 @@ public:
+   int getSize() { return size; }
+   XRefEntry *getEntry(int i) { return &entries[i]; }
+   Object *getTrailerDict() { return &trailerDict; }
++  ObjectStream *getObjStr() { return objStr; }
+ 
+   // Write access
+   void setModifiedObject(Object* o, Ref r);

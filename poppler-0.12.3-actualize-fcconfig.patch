@@ -1,0 +1,11 @@
+--- poppler-0.12.3/poppler/GlobalParams.cc	2009-10-06 00:46:28.000000000 +0200
++++ poppler-0.12.3/poppler/GlobalParams.cc	2010-01-27 16:48:26.000000000 +0100
+@@ -1131,6 +1131,8 @@ DisplayFontParam *GlobalParams::getDispl
+ 
+     if (!p)
+       goto fin;
++
++    FCcfg = FcConfigGetCurrent();
+     FcConfigSubstitute(FCcfg, p, FcMatchPattern);
+     FcDefaultSubstitute(p);
+     set = FcFontSort(FCcfg, p, FcFalse, NULL, &res);

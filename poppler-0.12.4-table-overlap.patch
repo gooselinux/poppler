@@ -1,0 +1,89 @@
+--- poppler-0.12.4/poppler/TextOutputDev.cc.orig	2010-05-04 13:05:34.000000000 +0200
++++ poppler-0.12.4/poppler/TextOutputDev.cc	2010-05-04 13:07:50.000000000 +0200
+@@ -3024,6 +3024,7 @@ void TextPage::coalesce(GBool physLayout
+   int numTables = 0;
+   int tableId = -1;
+   int correspondenceX, correspondenceY;
++  int overlapX, overlapY;
+   double xCentre1, yCentre1, xCentre2, yCentre2;
+   double xCentre3, yCentre3, xCentre4, yCentre4;
+   double deltaX, deltaY;
+@@ -3098,6 +3099,8 @@ void TextPage::coalesce(GBool physLayout
+       tableId = -1;
+       correspondenceX = 0;
+       correspondenceY = 0;
++      overlapX = 0;
++      overlapY = 0;
+       deltaX = 0.0;
+       deltaY = 0.0;
+ 
+@@ -3127,39 +3130,55 @@ void TextPage::coalesce(GBool physLayout
+       xCentre4 = (fblk4->xMax + fblk4->xMin) / 2.0;
+       yCentre4 = (fblk4->yMax + fblk4->yMin) / 2.0;
+ 
++      // do blocks overlap in x ?
++      if (blk1->xMax > fblk2->xMin ||
++          blk1->xMax > fblk4->xMin ||
++          fblk3->xMax > fblk2->xMin ||
++          fblk3->xMax > fblk4->xMin)
++        overlapX++;
++
++      // do blocks overlap in y ?
++      if (blk1->yMax > fblk3->yMin ||
++          blk1->yMax > fblk4->yMin ||
++          fblk2->yMax > fblk3->yMin ||
++          fblk2->yMax > fblk4->yMin)
++        overlapY++;
++
+       // are blocks centrally aligned in x ?
+-      if (abs (xCentre1 - xCentre3) <= deltaX &&
+-          abs (xCentre2 - xCentre4) <= deltaX)
++      if (fabs (xCentre1 - xCentre3) <= deltaX &&
++          fabs (xCentre2 - xCentre4) <= deltaX)
+         correspondenceX++;
+ 
+       // are blocks centrally aligned in y ?
+-      if (abs (yCentre1 - yCentre2) <= deltaY &&
+-          abs (yCentre3 - yCentre4) <= deltaY)
++      if (fabs (yCentre1 - yCentre2) <= deltaY &&
++          fabs (yCentre3 - yCentre4) <= deltaY)
+         correspondenceY++;
+ 
+       // are blocks aligned to the left ?
+-      if (abs (blk1->xMin - fblk3->xMin) <= deltaX &&
+-          abs (fblk2->xMin - fblk4->xMin) <= deltaX)
++      if (fabs (blk1->xMin - fblk3->xMin) <= deltaX &&
++          fabs (fblk2->xMin - fblk4->xMin) <= deltaX)
+         correspondenceX++;
+ 
+       // are blocks aligned to the right ?
+-      if (abs (blk1->xMax - fblk3->xMax) <= deltaX &&
+-          abs (fblk2->xMax - fblk4->xMax) <= deltaX)
++      if (fabs (blk1->xMax - fblk3->xMax) <= deltaX &&
++          fabs (fblk2->xMax - fblk4->xMax) <= deltaX)
+         correspondenceX++;
+ 
+       // are blocks aligned to the top ?
+-      if (abs (blk1->yMin - fblk2->yMin) <= deltaY &&
+-          abs (fblk3->yMin - fblk4->yMin) <= deltaY)
++      if (fabs (blk1->yMin - fblk2->yMin) <= deltaY &&
++          fabs (fblk3->yMin - fblk4->yMin) <= deltaY)
+         correspondenceY++;
+ 
+       // are blocks aligned to the bottom ?
+-      if (abs (blk1->yMax - fblk2->yMax) <= deltaY &&
+-          abs (fblk3->yMax - fblk4->yMax) <= deltaY)
++      if (fabs (blk1->yMax - fblk2->yMax) <= deltaY &&
++          fabs (fblk3->yMax - fblk4->yMax) <= deltaY)
+         correspondenceY++;
+ 
+-      // are blocks aligned in x and y ?
++      // are blocks aligned in x and y and don't overlap ?
+       if (correspondenceX > 0 &&
+-          correspondenceY > 0) {
++          correspondenceY > 0 &&
++          overlapX == 0 &&
++          overlapY == 0) {
+ 
+         // find maximal tableId
+         tableId = tableId < fblk4->tableId ? fblk4->tableId : tableId;
