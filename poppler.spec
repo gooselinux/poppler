@@ -2,7 +2,7 @@
 Summary: PDF rendering library
 Name: poppler
 Version: 0.12.4
-Release: 3%{?dist}.1
+Release: 3%{?dist}.1.goose.1
 License: GPLv2
 Group: Development/Libraries
 URL:     http://poppler.freedesktop.org/
@@ -252,6 +252,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Mar 28 2013 Clint Savage <herlo@gooseproject.org> - 0.12.4-3.el6.1.goose.1
+- Fix up for goose-release bump
 * Wed Oct  6 2010 Marek Kasik <mkasik@redhat.com> - 0.12.4-3.el6.1
 - Add poppler-0.12.4-CVE-2010-3702.patch
     (Properly initialize parser)
