@@ -2,7 +2,7 @@
 Summary: PDF rendering library
 Name: poppler
 Version: 0.12.4
-Release: 3%{?dist}
+Release: 3%{?dist}.1
 License: GPLv2
 Group: Development/Libraries
 URL:     http://poppler.freedesktop.org/
@@ -26,6 +26,15 @@ Patch5: poppler-0.12.4-table-overlap.patch
 ## upstream patches
 # for texlive/pdftex, make ObjStream class public
 Patch100: poppler-0.12.1-objstream.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=595245
+Patch101: poppler-0.12.4-CVE-2010-3702.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=639356
+Patch102: poppler-0.12.4-CVE-2010-3703.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=638960
+Patch103: poppler-0.12.4-CVE-2010-3704.patch
 
 Requires: poppler-data >= 0.4.0
 BuildRequires: automake libtool
@@ -137,6 +146,9 @@ converting PDF files to a number of other formats.
 %patch4 -p1 -b .rotated-downscale
 %patch5 -p1 -b .cell-overlap
 %patch100 -p1 -b .objstream
+%patch101 -p1 -b .CVE-2010-3702
+%patch102 -p1 -b .CVE-2010-3703
+%patch103 -p1 -b .CVE-2010-3704
 
 chmod -x goo/GooTimer.h
 
@@ -240,6 +252,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Oct  6 2010 Marek Kasik <mkasik@redhat.com> - 0.12.4-3.el6.1
+- Add poppler-0.12.4-CVE-2010-3702.patch
+    (Properly initialize parser)
+- Add poppler-0.12.4-CVE-2010-3703.patch
+    (Properly initialize stack)
+- Add poppler-0.12.4-CVE-2010-3704.patch
+    (Fix crash in broken pdf (code < 0))
+- Resolves: #639859
+
 * Wed May  5 2010 Marek Kasik <mkasik@redhat.com> - 0.12.4-3
 - Don't detect overlaping cells as table
 - Resolves: #588723
